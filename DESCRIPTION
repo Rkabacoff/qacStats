@@ -1,0 +1,16 @@
+Package: qacStat
+Type: Package
+Title: Statistical functions for QAC courses
+Version: 0.1.0
+Author: QAC 356 Advanced R students
+Maintainer: Robert Kabacoff <rkabacoff@wesleyan.edu>
+Description: This package contains functions that are useful for students
+    learning data science.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 6.1.1
