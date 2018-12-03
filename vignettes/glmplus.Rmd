@@ -1,0 +1,52 @@
+---
+title: "glmplus"
+author: "Lex Liu"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+`glmplus` is an enhanced version of general linear model for logistic regression. There are `summary.glmplus` and `plot.glmplus` in this package.
+
+## summary.glmplus
+
+`summary.glmplus` provides, in addition to the baseR `summary.glm`, odds ratio and confidence interval.
+```{r summary, warning=F}
+library(glmplus)
+data(mtcars)
+glm_model <- glmplus(vs ~ cyl + mpg + hp, data=mtcars, family=binomial)
+summary(glm_model)
+```
+
+## plot.glmplus
+
+`plot.glmplus` returns a ggplot object. The plot demonstrates the relationship between the given variable and the outcome binary variable.
+```{r}
+library(glmplus)
+data(mtcars)
+glm_model <- glmplus(vs ~ cyl + mpg + hp, data=mtcars, family=binomial)
+plot(glm_model, "hp")
+```
+
+```{r}
+plot(glm_model, "hp", "cyl")
+```
+
+```{r}
+plot(glm_model, "hp") + labs(y="Prob(V-shaped Engine)", 
+                             x="Horsepower", 
+                             title="Relationship of V-shape engine and horsepower",
+                             subtitle="controlling for mpg and number of cylinders")
+```
+
+
