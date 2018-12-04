@@ -2,11 +2,14 @@
 #'
 #' @description
 #' \code{getProbs} hidden function creating the actual ROC plots and table output with relevant model values.
+#' Some code for the generation of the plot and relevant statistics have been used from "Enhanced ROC Curve"
+#' coding example curated by Professor Robert Kabacoff as part of QAC385: Advanced R.
+#' Citation: Original source unknown. Retrieved by Kabacoff, Robert. "code - enhanced ROC curve.R." Function. Wesleyan University. Middletown, CT. October 2018. Accessed 4 December, 2018
 #'
 #' @details
 #' A function to help process the models supplied to plotROCS function and plot (potentially multiple) ROC curves, and related model calculations.
 #'
-#' @param list1 models to be supplied to the function. Ie., `model`, `fit.glm`, etc.
+#' @param list1 models to be supplied to the function, provided in form of a list. Ie., `model`, `fit.glm`, etc.
 #' @param colorsList option for the color of lines to be plotted, in order of models listed. Call taken from `plotROCS`.
 #' @param colorPoints option for the color of optimal cutoff point(s), if plotted.  Call taken from `plotROCS`.
 #' @param cutoffs option to plot the cutoff values.  Call taken from `plotROCS`.
@@ -18,7 +21,6 @@
 #' @import ggplot2
 #' @import caret
 #' @import regclass
-#' @import ROCR
 #' @import ROCR
 #' @export
 #' @author Elizaveta Kravchenko <ekravchenko@@wesleyan.edu>

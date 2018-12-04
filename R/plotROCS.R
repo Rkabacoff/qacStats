@@ -5,6 +5,9 @@
 #'
 #' @details
 #' A function for quick ROC plots of one or more model.
+#' Some code for the generation of the plot and relevant statistics as queried by the hidden helper function\code{getProbs}
+#' have been used from "Enhanced ROC Curve" coding example curated by Professor Robert Kabacoff as part of QAC385: Advanced R.
+#' Citation: Original source unknown. Retrieved by Kabacoff, Robert. "code - enhanced ROC curve.R." Function. Wesleyan University. Middletown, CT. October 2018. Accessed 4 December, 2018
 #'
 #' @param ... models to be supplied to the function. Ie., `model`, `fit.glm`, etc.
 #' @param colorsList option for the color of lines to be plotted, in order of models listed. Default `c("red", "blue", "magenta", "lightgreen")`.
@@ -14,11 +17,13 @@
 #' @param opCP option to include the optimal cutoff point(s) when plotting. Default `TRUE`.
 #'
 #' @export
+#' @examples
+#' plotROCS(fit.glm, fit)
+#' plotROCS(fit.glm, fit, colorsList=c("violet","maroon"), cutoffSpec=seq(0,1,by=.05))
 #' @author Elizaveta Kravchenko <ekravchenko@@wesleyan.edu>
 
 plotROCS <- function(..., colorsList= c("red", "blue", "magenta", "lightgreen"),
                      colorPoints = "red", cutoffs=F, cutoffSpec=NULL, opCP=T){
-  warning("The data sets of your models must be unique.")
   x<-quos(...)
   useList <- vector("list", length(x))
   for(i in 1:length(x)){
