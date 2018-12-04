@@ -36,6 +36,7 @@ audit <- function(data, Basic = TRUE, Quantitative = TRUE, Categorical = TRUE,
   if (is.tbl(data)) {
     data <- as.data.frame(data)
   }
+  if(!is.data.frame(data)) data <- as.data.frame(data)
   data <- deparse(substitute(data))
 
   # read template file and modify

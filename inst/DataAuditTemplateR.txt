@@ -16,7 +16,7 @@ gg=xxxgg
 ```{r Basic Summary Stats, eval=BASIC}
 skim_with_defaults()
 if (!is.null(summaryStats)) {
-  skim_with(.list = summaryStats, append = F)
+  skim_with(!!!summaryStats, append = F)
 }else{
 skim_with(numeric = list(median = ~median(., na.rm = T), hist=NULL), integer = list(hist=NULL))
 }
@@ -31,12 +31,12 @@ The Data is", object.size(xxxdata), "bytes large."))
 ```
 ```{r Basic Stats Table, Character, eval=BASIC, fig.head="Character"}
 if (!is.null(BasicAudit$character)){
-kable(BasicAudit$character,caption = "Character Variables", format = 'html')
+kable(BasicAudit$character,caption = "Character Variables", format = 'pandoc')
 }
 ```
 ```{r Basic Stats Table, Numeric, eval=BASIC}
 if (!is.null(BasicAudit$numeric)){
-kable(BasicAudit$numeric,caption = "Numeric Variables", format="markdown")
+kable(BasicAudit$numeric,caption = "Numeric Variables", format="pandoc")
 }
 ```
 ```{r Basic Stats Table, Factor, eval=BASIC}
@@ -83,8 +83,12 @@ for (i in names(xxxdata)) {
 cat("##Categorical Variable Analysis")
 ```
 ```{r Categorical Analysis, fig.width=6, fig.height=4, eval=CATEGORICAL}
+catvar <- c()
     for (i in names(xxxdata)){
       if (is.factor(xxxdata[, i])|is.character(xxxdata[, i])) {
+        if(length(unique(xxxdata[,i])) > 0.25*length(xxxdata[,i]) |
+           length(unique(xxxdata[,i])) > 20) next
+        catvar <- c(catvar, i)
         if (gg) {
           i <- as.symbol(i)
           print(ggplot(aes(x=!!i), data=xxxdata)+
@@ -99,6 +103,48 @@ cat("##Categorical Variable Analysis")
       }
     }
 
+
+df_freq_tables <- function(data, vars, na.rm = TRUE) {
+  if (!is.data.frame(data)) {
+    stop("Data is not in data frame format")
+  }
+  if (is.null(vars)) return(NA)
+  if (!missing(vars)) {
+    if (!is.character(vars)) {
+      stop("Variable names must be a character vector")
+    }
+  } else {
+    vars <- names(data)
+  }
+  if (na.rm) {
+    result <- list()
+    for (i in vars) {
+      count <- as.data.frame(table(data[i], useNA = "no"))
+      names(count) <- c(i, "Count")
+      prop <- as.data.frame(prop.table(table(data[i], useNA = "no")))
+      names(prop) <- c(i, "Proportion")
+      prop$Proportion <- round(prop$Proportion, 2)
+      result[[i]] <- merge(count, prop, by = i)
+      names(result[[i]]) <- c(i, "Count", "Proportion")
+    }
+    return(result)
+  }
+  else {
+    result <- list()
+    for (i in vars) {
+      count <- as.data.frame(table(data[i], useNA = "ifany"))
+      names(count) <- c(i, "Count")
+      prop <- as.data.frame(prop.table(table(data[i], useNA = "ifany")))
+      names(prop) <- c(i, "Proportion")
+      prop$Proportion <- round(prop$Proportion, 2)
+      result[[i]] <- merge(count, prop, by = i)
+      names(result[[i]]) <- c(i, "Count", "Proportion")
+    }
+    return(result)
+  }
+}
+if(!is.na(df_freq_tables(xxxdata, catvar))){ kable(df_freq_tables(xxxdata, catvar))
+}
 ```
 
 ```{r BivariateTitle, results='asis', eval=BIVARIATE}
@@ -111,16 +157,18 @@ Red points signify a high Correlation.")
 ```{r Bivariate Analysis, fig.height=4, fig.width=4, eval=BIVARIATE}
 graphs <- list()
 for (i in 1:length(names(xxxdata))) {
+  if(is.factor(xxxdata[,i])) next
   if (is.numeric(xxxdata[, i]) || ((!is.na(as.numeric(xxxdata[, i]))))) {
     if(gg) i <- as.symbol(names(xxxdata)[i])
     for (j in 1:length(names(xxxdata))) {
+      if(is.factor(xxxdata[,j])) next
       if (is.numeric(xxxdata[, j]) || ((!is.na(as.numeric(xxxdata[, j]))))){
         if (gg) {
           j <- as.symbol(names(xxxdata)[j])
           if (i>=j) next
           if (is.na(cor(as.double(xxxdata[,as.character(i)]), as.double(xxxdata[,as.character(j)]), use = "na.or.complete"))) {
             next
-          } else if (cor(as.double(xxxdata[,as.character(i)]), as.double(xxxdata[,as.character(j)]), use = "na.or.complete") < 0.9) {
+          } else if (cor(as.double(xxxdata[,as.character(i)]), as.double(xxxdata[,as.character(j)]), use = "na.or.complete") < 0.95) {
             graphs[[paste0(as.character(i),as.character(j))]] <- ggplot(aes(x = !!i, y = !!j), data = xxxdata) +
               geom_point() +
               geom_smooth(method = "lm") +
@@ -140,7 +188,7 @@ for (i in 1:length(names(xxxdata))) {
         } else {
           if (i>=j) next
           if (is.numeric(xxxdata[, j]) || (!is.na(as.numeric(xxxdata[, j])))){
-            if(ifelse(is.na(cor(as.double(xxxdata[,i]), as.double(xxxdata[,j]), use = "na.or.complete")),0,cor(as.double(xxxdata[,i]), as.double(xxxdata[,j]), use = "na.or.complete"))>0.9){
+            if(ifelse(is.na(cor(as.double(xxxdata[,i]), as.double(xxxdata[,j]), use = "na.or.complete")),0,cor(as.double(xxxdata[,i]), as.double(xxxdata[,j]), use = "na.or.complete"))>0.95){
           plot(xxxdata[, i], xxxdata[, j],
                type = "p",
                xlab = names(xxxdata)[i], ylab = names(xxxdata)[j],
@@ -160,10 +208,11 @@ for (i in 1:length(names(xxxdata))) {
     }
   }
 }
-if(gg){
+if(gg & length(graphs)!=0){
 for(g in 1:length(graphs)){
   print(graphs[[g]])
-}}
+}
+  }
 ```
 
 ```{r IssuesTitle1, results='asis', eval=ISSUES}
@@ -177,7 +226,7 @@ Some variables may be coded as numeric, but are really categorical. The Followin
 ```
 ```{r Shouldbe Categorical, eval=ISSUES}
 should_be_categorical <- function(var) {
-  if (!is.numeric(var)) return(F)
+  if (!is.numeric(var) & !is.factor(var)) return(F)
   if (length(levels(factor(var))) < 5) {
     return(T)
   } else {
