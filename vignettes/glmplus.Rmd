@@ -31,18 +31,18 @@ summary(glm_model)
 ## plot.glmplus
 
 `plot.glmplus` returns a ggplot object. The plot demonstrates the relationship between the given variable and the outcome binary variable.
-```{r}
+```{r fig.height=4.5, fig.width=7}
 library(glmplus)
 data(mtcars)
 glm_model <- glmplus(vs ~ cyl + mpg + hp, data=mtcars, family=binomial)
 plot(glm_model, "hp")
 ```
 
-```{r}
+```{r fig.height=4.5, fig.width=7}
 plot(glm_model, "hp", "cyl")
 ```
 
-```{r}
+```{r fig.height=4.5, fig.width=7}
 plot(glm_model, "hp") + labs(y="Prob(V-shaped Engine)", 
                              x="Horsepower", 
                              title="Relationship of V-shape engine and horsepower",
