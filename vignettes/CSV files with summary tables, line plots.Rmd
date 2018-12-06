@@ -1,0 +1,129 @@
+---
+title: "CSV files with summary tables, line plots"
+author: "Belen Rodriguez"
+date: "2018-12-04"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+csv_file_table <- function(path, bin_var, nbins=10, bp=NULL, adherentvar=NULL, export_file_name){
+  require(dplyr)
+  require(readxl)
+
+  #Reading in dataset from Excel (.xls or .xlsx), turning dataset to dataframe
+  dataset <- read_excel(path, na=c("", "NA"))
+  dataset <- as.data.frame(dataset)
+
+  #Binning variable
+  bin_var <- as.numeric(as.character(dataset[[bin_var]]))
+  if(!is.null(bp)){
+    bp <- bp
+  } else{
+    bp <- pretty(bin_var, n=nbins)
+  }
+  y <- cut(bin_var, breaks=bp, labels=NULL)
+
+  #Summary table w/ dplyr
+  y <- enquo(y)
+  results = dataset %>%
+    group_by(!!y) %>%
+    summarise(n=n()) %>%
+    mutate(prop=n/sum(n)) %>%
+    mutate(cum_freq=cumsum(n)) %>%
+    mutate(cum_prop=cumsum(prop))
+
+  #Adding adherent var to summary table w/ dplyr
+  if(!is.null(adherentvar)){
+    adherentvar <- enquo(adherentvar)
+    adherent_results = dataset %>%
+      group_by(!!adherentvar) %>%
+      summarise(n=n()) %>%
+      mutate(prop=n/sum(n))
+    results = cbind(results, adherent_results)
+  }
+
+  #Final .CSV file
+  write.table(results, file=export_file_name, sep=",", row.names=FALSE)
+}
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+line_plot <- function(path, primaryaxis, secaxis){
+  #Reading in .csv file, converting to a dataframe
+  results_csv <- read.csv(path)
+  results_csv <- as.data.frame(results_csv)
+
+  #Renaming first column to intervals, omitting missing values, & turning 'intervals' column from factor to numeric
+  names(results_csv)[1] = "intervals"
+  results_csv = results_csv[results_csv$intervals != "NA",]
+  results_csv <- na.omit(results_csv)
+
+  #Plot
+  primaryaxis <- deparse(substitute(primaryaxis))
+  secaxis <- deparse(substitute(secaxis))
+  par(mar = c(5, 5, 3, 5))
+  plot(results_csv[[primaryaxis]], type ="l", ylab = "Cumulative Proportion",
+       main = "Plot of Cumulative Proportion and Proportion", xlab = "Intervals",
+       col = "blue")
+  axis(side=4)
+  par(new = TRUE)
+  plot(results_csv[[secaxis]], type = "l", xaxt = "n", yaxt = "n",
+       ylab = "", xlab = "", col = "red", lty = 2)
+  mtext("Proportion", side = 4, line = 3)
+  legend("topleft", c("Cumulative Proportion", "Proportion"),
+         col = c("blue", "red"), lty = c(1, 2), cex = 0.4)
+}
+```
+
+## Function Summaries
+
+The first function of this package, csv_file_table, generates a CSV file with the summary table of the binned variables.
+For the csv_file_table function, type path = file.choose() and click on the Excel file (.xls or .xlsx) that contains the dataset. 
+bin_var refers to the variable you want to bin - make sure argument is a string.
+You can switch the count of nbins you desire - the default is set to 10.
+You can identify the intervals you want in bp or you can allow pretty() within the function to create 'pretty' intervals.
+If you have an adherent variable that you want to be part of your summary table you can indicate it as an argument.
+export_file_name takes in a string input for what you want the file name of the summary table to be.
+The function produces a .csv file with the summary table results in your working directory.
+
+The second function of this package, line_plot, generates a line plot from the summary table produced in the first function.
+For line_plot function, type path = file.choose() and click on the .csv file with the summary table results created through the csv_file_table function.
+primaryaxis is the variable you want plotted on the left y axis.
+secaxis is the variable you wanted plotted on the right y axis.
+
+## Examples
+
+In the first example, a CSV file was created with the summary statistics for the variable days_to_follow_up1.
+
+```{r eval=FALSE, echo=TRUE}
+path = "/Users/belen/Desktop/senior/Advanced R/sample_data.xls"
+
+csv_file_table(path=path, bin_var="days_to_follow_up1", export_file_name="results.csv")
+```
+
+Below is the CSV file created with the summary statistics for the
+variable days_to_follow_up1.
+
+<img src="/Users/belen/projects/qacStat/vignettes/results_screenshot.png">
+
+In the second example, the cumulative proportion and proportions calculated within the CSV file's summary table in the first function is plotted, in the primary and secondary axis respectively, with the X axis as the binned intervals.
+
+```{r eval=FALSE, echo=TRUE}
+path = "/Users/belen/results.csv"
+
+line_plot(path=path, primaryaxis=cum_prop, secaxis=prop)
+```
+
+<img src="/Users/belen/projects/qacStat/vignettes/line_plot_screenshot.png">
+
