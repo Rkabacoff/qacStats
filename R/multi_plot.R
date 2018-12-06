@@ -124,7 +124,6 @@ multi_plot <- function(lm, data, time_var = NULL,
       theme(legend.position="bottom")
     print(p5)
   }
-  
   if (!is.null(data[[time_var]]) & rvo_plot == TRUE) {
     
     if (class(lm) != "lm") {
