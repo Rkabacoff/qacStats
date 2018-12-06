@@ -21,10 +21,9 @@
 #' @author Shane Ross <saross@@wesleyan.edu>
 #' @examples
 #' data(mtcars)
-#' reg <- lm(mpg ~ wt + cyl + hp, data = mtcars)
-#' multi_plot(regression, mtcars, rvf_plot = TRUE,
+#' regression <- lm(mpg ~ wt + cyl + hp, data = mtcars)
+#' multi_plot(regression, mtcars, qsec, rvf_plot = TRUE,
 #'           qq_plot = TRUE, scloc_plot = TRUE, resvlev_plot = TRUE)
-NULL
 
 multi_plot <- function(lm, data, time_var = NULL,
                        rvf_plot = TRUE, qq_plot = TRUE, scloc_plot = TRUE,
@@ -125,8 +124,7 @@ multi_plot <- function(lm, data, time_var = NULL,
       theme(legend.position="bottom")
     print(p5)
   }
-  
-  if (rvo_plot == TRUE & !is.null(time_var)) {
+  if (!is.null(data[[time_var]]) & rvo_plot == TRUE) {
     
     if (class(lm) != "lm") {
       stop("lm must be a linear model")
