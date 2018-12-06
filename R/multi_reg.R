@@ -28,17 +28,11 @@
 #' @author Shane Ross <saross@@wesleyan.edu>
 #' @examples
 #' data(mtcars)
-#' reg <- lm(mpg ~ wt + cyl + hp, data = mtcars)
+#' regression <- lm(mpg ~ wt + cyl + hp, data = mtcars)
 #' multi_reg(regression, mtcars, results = TRUE,
 #'           type = "text", out = "my_table", export_table = TRUE,
 #'           file_name = "my_table.xlsx", cor_matrix = TRUE,
-#'           hist_of_residuals = TRUE)
-NULL
-
-
-regression <- lm(mpg~ cyl + hp + wt, data = mtcars)
-
-# Multiple Regression Function
+#'           hist_of_resid = TRUE)
 
 multi_reg <- function(formula, data, results = TRUE,
                       type= "text", out = NULL,
@@ -114,6 +108,8 @@ multi_reg <- function(formula, data, results = TRUE,
     write.xlsx(mcp_table, file = file_name)
   }
   
+  if (cor_matrix == TRUE) {
+  
   summary.lm[["coefficients"]] <- mcp_table
   
   a <- rownames(mcp_table)[-1]
@@ -147,6 +143,7 @@ multi_reg <- function(formula, data, results = TRUE,
                    p.mat = p_mat, sig.level = 0.05, insig = "blank", 
                    diag=FALSE 
   )
+  }
   
   gg <-  ggplot(data=regression, aes(.resid)) + 
     geom_histogram(aes(y = ..density..), 
@@ -159,13 +156,8 @@ multi_reg <- function(formula, data, results = TRUE,
     labs(x="Residuals", y="Count") +
     theme_classic()
   
-  if (cor_matrix == TRUE & hist_of_resid == TRUE) {
+  if (hist_of_resid == TRUE) {
     print(gg)
-    print(corr)
-  } else if (cor_matrix == TRUE & hist_of_resid == FALSE) {
-    print(corr)
-  } else if (cor_matrix == FALSE & hist_of_resid == TRUE) {
-    print(gg)
-  }
+}
   return(invisible(summary.lm))
 }
