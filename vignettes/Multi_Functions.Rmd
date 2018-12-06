@@ -1,0 +1,75 @@
+---
+title: "Multi Functions"
+author: "Shane Ross"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Two-table verbs}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(multi_reg)
+```
+
+While base R's lm returns a very informative and useful multiple regression 
+model, these functions produce dull tables and graphs and bury valuable 
+regression information in lists. Developed to refine the lm functions, the 
+multi functions (multi_reg and multi_plot) output the same information
+returned by the lm functions, but present it in a much more aesthetically 
+pleasing and clear way.
+
+## Regression Results
+
+While lm.summary presents regression results through a basic table, 
+multi_reg depicts the results of the linear model through a visually appealing and highly comprehensible stargazer table.
+
+```{r Multiple Regression Stargazer Table}
+data(mtcars)
+regression <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+multi_reg(regression, mtcars)
+```
+
+The multi_reg function also enhances the results table embedded in 
+lm.summary by adding a 95% confidence interval for each coefficient as well
+as stars to represent significant predictors.
+
+```{r Multiple Regression Results}
+a <- multi_reg(regression, mtcars)
+a[["coefficients"]]
+```
+
+In order to facilitate user demands to immediately save the results of the 
+multiple regression, the multi_reg function includes the `export_data`
+parameter. When `export_data = TRUE`, this function will save the results
+of the multiple regression model into an Excel file. The `file_name` 
+parameter allows the user to customize the name of this Excel file.
+
+## Regression Diagnostic Tests
+
+Multiple linear regressions assume that residuals are normally distributed 
+and that independent variables are not highly correlated with one another. 
+While the lm function does not allow clear opportunities to assess these 
+assumptions, multi_reg offers the user a histogram of the model's results as
+well as a correlation plot depicting the correlations of each predictor in 
+the model.
+
+```{r Diagnostic Tests}
+multi_reg(regression, mtcars, results = FALSE, 
+          hist_of_resid = TRUE, corr_plot = TRUE)
+```
+
+## Regression Diagnostic Plots
+
+Although the lm.plot function outputs extremely informative plots assessing
+the validity of the multiple regression model, these plots are exceptionally
+dull. In order to more persuasively and transparently convey these results, 
+mulit_plot utilizes ggplot to return the same informaion in a more elegant 
+fashion. Multi_plot also includes a Residuals versus Order plot to evaluate 
+the relationship among the residuals over the duration of data collection.
+
+```{r Diagnostic Plots}
+multi_plot(regression, mtcars, wt)
+```
