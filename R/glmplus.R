@@ -21,8 +21,8 @@
 #' plot(glm_model, "hp", "cyl")
 #' plot(glm_model, "hp")
 #'
-glmplus <- function(...) {
-    glm_model <- glm(...)
+glmplus <- function(formula, family="binomial", data) {
+    glm_model <- glm(formula=formula, family=family, data=data)
     class(glm_model) <- c("glmplus", class(glm_model))
     glm_model
 }
