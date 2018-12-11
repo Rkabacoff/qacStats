@@ -1,0 +1,49 @@
+---
+title: "Introduction to Data Audit"
+author: "Griffin Barich"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setupp, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(qacStat)
+```
+
+The data audit function takes a data frame, or an object that can be coerced to a dataframe, and returns a report with semi-customizable parts. The Report is made up of five parts: Basic Statistics, Quantitative Statistics, Categorical Statistics, Bivariate Analysis, Possible Issues.
+
+Users can pass their own summary statistics to the report through the syntax described in the \code{skimr} package detailed below.
+```{r sum, eval=F, echo=FALSE}
+mysummarystatistics <- list(numeric=list(mean=mean, standd=sd),
+                            character=list(length=length),
+                            integer=list(median=median),
+                            factor=list(levels=levels))
+audit(qacData::cars74, summaryStats = mysummarystatistics)
+```
+
+For the Quantitative and Categorical Section, graphs can be created in \code{ggplot2}, or in base \code{R} depending on the gg option.
+```{r quantorcat, eval=F}
+audit(mtcars, gg=FALSE)
+```
+
+The Bivariate section prints out bivariate graphs between every two numeric variable. Factors and other categorical variables will not print. This section can be very long and is not included by default for that reason.
+
+The Issues section has some interesting notes in order to analyze your data more thoroughly. 
+  A variable is said to possibly be categorical if there are fewer than 5 unique numerical values.
+  A variable has high skew if its skewness is more than twice the standard deviation of the variable. 
+  A variable has low variance if its variance is less than 1/4 of the mean.
+  A variable is a "Boring Variable" if it only has one value.
+  
+  
+Every part of this report can be switched on or off using the arguments corresponding to them.
+
+```{r pieces, eval=F}
+audit(qacData::tv17, Basic = T, Quantitative = T, Categ = F, Biv=T)
+```
+

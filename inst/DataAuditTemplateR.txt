@@ -1,0 +1,348 @@
+---
+output: html_document
+fig_caption: yes
+---
+# Data Audit
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+library(skimr)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(e1071)
+gg=xxxgg
+```
+
+```{r Basic Summary Stats, eval=BASIC}
+skim_with_defaults()
+if (!is.null(summaryStats)) {
+  skim_with(!!!summaryStats, append = F)
+}else{
+skim_with(numeric = list(median = ~median(., na.rm = T), hist=NULL), integer = list(hist=NULL))
+}
+suppressWarnings(BasicAudit <- skim_to_list(xxxdata))
+```
+
+```{r BasicTitle, results='asis', eval=BASIC}
+cat(paste("##Basic Statistics on the Data \n\n
+
+The Data is a", class(xxxdata), "with", nrow(xxxdata), "rows and", ncol(xxxdata), "columns.\n
+The Data is", object.size(xxxdata), "bytes large."))
+```
+```{r Basic Stats Table, Character, eval=BASIC, fig.head="Character"}
+if (!is.null(BasicAudit$character)){
+names(BasicAudit$character)[1] <- "Char Var"
+kable(BasicAudit$character,caption = "Character Variables", format = 'pandoc')
+}
+```
+```{r Basic Stats Table, Numeric, eval=BASIC}
+if (!is.null(BasicAudit$numeric)){
+names(BasicAudit$numeric)[1] <- "Num Var"
+kable(BasicAudit$numeric,caption = "Numeric Variables", format="pandoc")
+}
+```
+```{r Basic Stats Table, Factor, eval=BASIC}
+if (!is.null(BasicAudit$factor)){
+names(BasicAudit$factor)[1] <- "Fac Var"
+kable(BasicAudit$factor,caption = "Factor Variables", format="pandoc")
+}
+```
+```{r Basic Stats Table, Integer, eval=BASIC}
+if (!is.null(BasicAudit$integer)){
+names(BasicAudit$integer)[1] <- "Int Var"
+kable(BasicAudit$integer,caption = "Integer Variables", format="pandoc")
+}
+```
+```{r Basic Stats Table, Date, eval=BASIC}
+if (!is.null(BasicAudit$Date)){
+names(BasicAudit$Date)[1] <- "Date Var"
+kable(BasicAudit$Date,caption = "Date Variables", format="pandoc")
+}
+```
+```{r Basic Stats Table, Logical, eval=BASIC}
+if (!is.null(BasicAudit$logical)){
+names(BasicAudit$logical)[1] <- "Log Var"
+kable(BasicAudit$logical,caption = "Boolean Variables", format="pandoc")
+}
+```
+
+```{r QuantitativeTitle, results='asis', eval=QUANTITATIVE}
+cat("##Quantitative Variable Analysis")
+```
+```{r Quantitative Analysis, fig.width=3, fig.height=3, eval=QUANTITATIVE}
+for (i in names(xxxdata)) {
+  if (is.numeric(xxxdata[, i]) || (!is.na(as.numeric(xxxdata[, i])) & !is.factor(xxxdata[, i]))) {
+    if (gg) {
+      i <- as.symbol(i)
+      try(print(ggplot(data = xxxdata) +
+        geom_histogram(aes(x = !!i), bins = 10) +
+        ggtitle(label = paste("Histogram of", i))))
+    }
+    else {
+      hist(as.numeric(xxxdata[, i]), main = paste("Histogram of", i), xlab = i)
+    }
+  }
+}
+```
+
+```{r CategoricalTitle, results='asis', eval=CATEGORICAL}
+cat("##Categorical Variable Analysis")
+```
+```{r Categorical Analysis, fig.width=6, fig.height=4, eval=CATEGORICAL}
+catvar <- c()
+    for (i in names(xxxdata)){
+      if (is.factor(xxxdata[, i])|is.character(xxxdata[, i])) {
+        if(length(unique(xxxdata[,i])) > 0.25*length(xxxdata[,i]) |
+           length(unique(xxxdata[,i])) > 20) next
+        catvar <- c(catvar, i)
+        if (gg) {
+          i <- as.symbol(i)
+          print(ggplot(aes(x=!!i), data=xxxdata)+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 40, hjust = 1, vjust = 1))+
+                  ggtitle(label = paste("Chart of", i)))
+          i <- as.character(i)
+        }
+        else{
+          barplot(table(xxxdata[, i]), main = paste("Bar Chart of", i), xlab=names(xxxdata)[i])
+        }
+      }
+    }
+
+
+df_freq_tables <- function(data, vars, na.rm = TRUE) {
+  if (!is.data.frame(data)) {
+    stop("Data is not in data frame format")
+  }
+  if (is.null(vars)) return(NA)
+  if (!missing(vars)) {
+    if (!is.character(vars)) {
+      stop("Variable names must be a character vector")
+    }
+  } else {
+    vars <- names(data)
+  }
+  if (na.rm) {
+    result <- list()
+    for (i in vars) {
+      count <- as.data.frame(table(data[i], useNA = "no"))
+      names(count) <- c(i, "Count")
+      prop <- as.data.frame(prop.table(table(data[i], useNA = "no")))
+      names(prop) <- c(i, "Proportion")
+      prop$Proportion <- round(prop$Proportion, 2)
+      result[[i]] <- merge(count, prop, by = i)
+      names(result[[i]]) <- c(i, "Count", "Proportion")
+    }
+    return(result)
+  }
+  else {
+    result <- list()
+    for (i in vars) {
+      count <- as.data.frame(table(data[i], useNA = "ifany"))
+      names(count) <- c(i, "Count")
+      prop <- as.data.frame(prop.table(table(data[i], useNA = "ifany")))
+      names(prop) <- c(i, "Proportion")
+      prop$Proportion <- round(prop$Proportion, 2)
+      result[[i]] <- merge(count, prop, by = i)
+      names(result[[i]]) <- c(toupper(i), "Count", "Proportion")
+    }
+    return(result)
+  }
+}
+```
+
+```{r, fig.width=4, eval=CATEGORICAL, results="asis"}
+if(!is.na(df_freq_tables(xxxdata, catvar))){
+  tables <- lapply(df_freq_tables(xxxdata, catvar), kable, align = c("l", "r", "r"), digits=2, format= "html")
+  for (i in seq_along(tables)) print(tables[[i]])
+  }
+```
+
+
+
+```{r BivariateTitle, results='asis', eval=BIVARIATE}
+cat("##Bivariate Analysis\n\n
+
+Red points signify a high Correlation.")
+```
+
+
+```{r Bivariate Analysis, fig.height=4, fig.width=4, eval=BIVARIATE}
+graphs <- list()
+for (i in 1:length(names(xxxdata))) {
+  if(is.factor(xxxdata[,i])) next
+  if (is.numeric(xxxdata[, i]) || ((!is.na(as.numeric(xxxdata[, i]))))) {
+    if(gg) i <- as.symbol(names(xxxdata)[i])
+    for (j in 1:length(names(xxxdata))) {
+      if(is.factor(xxxdata[,j])) next
+      if (is.numeric(xxxdata[, j]) || ((!is.na(as.numeric(xxxdata[, j]))))){
+        if (gg) {
+          j <- as.symbol(names(xxxdata)[j])
+          if (i>=j) next
+          if (is.na(cor(as.double(xxxdata[,as.character(i)]), as.double(xxxdata[,as.character(j)]), use = "na.or.complete"))) {
+            next
+          } else if (cor(as.double(xxxdata[,as.character(i)]), as.double(xxxdata[,as.character(j)]), use = "na.or.complete") < 0.95) {
+            graphs[[paste0(as.character(i),as.character(j))]] <- ggplot(aes(x = !!i, y = !!j), data = xxxdata) +
+              geom_point() +
+              geom_smooth(method = "lm") +
+              ggtitle(paste("Chart of", i, "vs", j),
+                      subtitle = paste("Correlation =", round(cor(as.double(xxxdata[,as.character(i)]), as.double(xxxdata[,as.character(j)]), use = "na.or.complete"), 2))
+              )
+          next
+            } else {
+            graphs[[paste0(as.character(i),as.character(j))]] <- ggplot(aes(x = !!i, y = !!j), data = xxxdata) +
+              geom_point(color = "red") +
+              geom_smooth(method = "lm") +
+              ggtitle(paste("Chart of", i, "vs", j),
+                      subtitle = paste("Correlation =", round(cor(as.double(xxxdata[,as.character(i)]), as.double(xxxdata[,as.character(j)]), use = "na.or.complete"), 2))
+              )
+          next
+            }
+        } else {
+          if (i>=j) next
+          if (is.numeric(xxxdata[, j]) || (!is.na(as.numeric(xxxdata[, j])))){
+            if(ifelse(is.na(cor(as.double(xxxdata[,i]), as.double(xxxdata[,j]), use = "na.or.complete")),0,cor(as.double(xxxdata[,i]), as.double(xxxdata[,j]), use = "na.or.complete"))>0.95){
+          plot(xxxdata[, i], xxxdata[, j],
+               type = "p",
+               xlab = names(xxxdata)[i], ylab = names(xxxdata)[j],
+               main = paste(
+                 "Plot of", names(xxxdata)[i],
+                 "against", names(xxxdata)[j]), col="red")
+            } else{
+                 plot(xxxdata[, i], xxxdata[, j],
+               type = "p",
+               xlab = names(xxxdata)[i], ylab = names(xxxdata)[j],
+               main = paste(
+                 "Plot of", names(xxxdata)[i],
+                 "against", names(xxxdata)[j]))
+               }
+        }}
+      }
+    }
+  }
+}
+if(gg & length(graphs)!=0){
+for(g in 1:length(graphs)){
+  print(graphs[[g]])
+}
+  }
+```
+
+```{r IssuesTitle1, results='asis', eval=ISSUES}
+cat(paste("## Potential Issues\n\n"))
+```
+
+```{r Missing, eval=ISSUES}
+Missing <- sum(is.na(xxxdata)) != 0
+```
+
+```{r, results='asis', eval=ISSUES & Missing}
+cat(paste0("##### Missing Data\n
+There are ", sum(is.na(xxxdata)), " pieces of missing data.\n
+This makes up ", round((sum(is.na(xxxdata))/sum(is.na(xxxdata), !is.na(xxxdata))*100),2) ,"% of the data."))
+
+```
+
+```{r Cat, eval=ISSUES}
+should_be_categorical <- function(var) {
+  if (!is.numeric(var) & !is.factor(var)) return(F)
+  if (length(levels(factor(var))) < 5) {
+    return(T)
+  } else {
+    return(F)
+  }
+}
+sbcatv <- character(ncol(xxxdata))
+for (i in 1:ncol(xxxdata)) {
+  if (should_be_categorical(xxxdata[, i])) {
+    sbcatv[i] <- paste0(names(xxxdata)[i], " could be Categorical.")
+  }
+}
+sbcatv <- as.data.frame(na.omit(ifelse(sbcatv=="", NA, sbcatv)))
+names(sbcatv) = "Maybe Categorical"
+Cat <- nrow(sbcatv)!=0
+```
+
+```{r, results='asis', eval=ISSUES & Cat}
+cat(paste("##### Possibly Categorical Variables\n
+Some variables may be coded as numeric, but are really categorical. The Following Variables may be mis-classified as Numeric, as they only have a few levels."))
+```
+```{r Shouldbe Categorical, eval=ISSUES & Cat}
+kable(sbcatv, col.names = "Maybe Categorical")
+```
+
+```{r Skw, eval=ISSUES}
+HighSkew <- function(var){
+  if(!is.numeric(var)) return(F)
+  if(ifelse(!is.na(skewness(var, na.rm = T)), abs(skewness(var, na.rm=T)),0)> 2*sd(var, na.rm=T)) return(round(skewness(var, na.rm=T), 3))
+  else return(F)
+}
+skewv <- character(ncol(xxxdata))
+ for (i in 1:ncol(xxxdata)){
+    if(!is.logical(HighSkew(xxxdata[,i]))){
+      skew <- HighSkew(xxxdata[,i])
+      skewv[i] <- paste0(names(xxxdata)[i], " has a skew of ", skew, ".")
+    }
+ }
+skewv <- as.data.frame(na.omit(ifelse(skewv=="", NA, skewv)))
+names(skewv) <- "Skew"
+Skw <- nrow(skewv)!=0
+```
+```{r IssuesTitle2, results='asis', eval=ISSUES & Skw}
+cat("##### High Skew\n
+These variables have high skew, which should be noted in analyzing the variables.")
+```
+```{r High Skew, eval=ISSUES & Skw}
+kable(skewv, col.names = c("Skew"))
+```
+
+```{r Lvar, eval=ISSUES}
+lowVariance <- function(var){
+  if(!is.numeric(var)) return(F)
+  if(var(var, na.rm = T) < (mean(var, na.rm=T)/4)) return(T)
+  else return(F)
+}
+lowvar <- character(ncol(xxxdata))
+    for (i in 1:ncol(xxxdata)){
+    if(lowVariance(xxxdata[,i])){
+  lowvar[i] <- paste0(names(xxxdata)[i], " has low variance.\n")    }
+    }
+lowvar <- as.data.frame(na.omit(ifelse(lowvar=="", NA, lowvar)))
+names(lowvar) = "Low Variance"
+Lvar <- nrow(lowvar)!=0
+```
+
+```{r IssuesTitle3, results='asis', eval=ISSUES & Lvar}
+cat("##### Low Variance\n
+Some variables may have a low variance, so you may not want to use them in your analysis.")
+```
+```{r Low Variance, eval=ISSUES & Lvar}
+kable(lowvar, col.names = "Low Variance")
+```
+
+```{r, Bvar, eval=ISSUES}
+BoringVar <- function(var){
+  if(length(unique(var))==1) return(T)
+  else return(F)
+}
+bovar <- character(ncol(xxxdata))
+    for (i in 1:ncol(xxxdata)){
+    if(BoringVar(xxxdata[,i])){
+      bovar[i] <- paste0(names(xxxdata)[i], " has only one value.")
+          }
+    }
+bovar <- as.data.frame(na.omit(ifelse(bovar=="", NA, bovar)))
+names(bovar) <- "Vars w/ One Value"
+Bvar <- nrow(bovar)!=0
+```
+
+```{r IssuesTitle4, results='asis', eval=ISSUES & Bvar}
+cat("##### Boring Variables\n
+Some Variables only have one value and therefore should not be used in analysis.")
+```
+```{r Boring Vars, eval=ISSUES & Bvar}
+kable(bovar, col.names = "Vars w/ One Value")
+```
+```{r NoIssues, eval=(ISSUES & !Skw & !Missing & !Cat & !Lvar), results='asis'}
+cat("No Issues")
+```

@@ -1,0 +1,19 @@
+Package: qacStat
+Type: Package
+Title: CSV files with summary tables, line plots
+Version: 0.1.0
+Date: 2018-12-04
+Author: Belen Rodriguez
+Maintainer: Belen Rodriguez <brodriguez@wesleyan.edu>
+Description: This package has a function that generates a CSV file with the 
+    summary table of binned variables and a second function that generates a line plot
+    based off the CSV file generated in the first function. 
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 6.1.0
+
+
