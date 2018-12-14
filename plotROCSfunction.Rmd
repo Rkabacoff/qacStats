@@ -1,0 +1,82 @@
+---
+title: "plotROCS Function"
+author: "Elizaveta Kravchenko"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{r,warning=F,message=F,echo=F}
+# model 1
+library(caret)
+library(regclass)
+data("PIMA")
+index <- createDataPartition(PIMA$Diabetes, p=0.7, list=FALSE)
+train <- PIMA[index,]
+test <- PIMA[-index,]
+fit.glm <- glm(Diabetes ~ ., data=train, family = binomial)
+
+# model 2
+loc <- "http://archive.ics.uci.edu/ml/machine-learning-databases/"
+ds  <- "breast-cancer-wisconsin/breast-cancer-wisconsin.data"
+url <- paste(loc, ds, sep="")
+
+breast <- read.table(url, sep=",", header=FALSE, na.strings="?")
+names(breast) <- c("ID", "clumpThickness", "sizeUniformity",
+                     "shapeUniformity", "maginalAdhesion",
+                     "singleEpithelialCellSize", "bareNuclei",
+                     "blandChromatin", "normalNucleoli", "mitosis", "class")
+
+df <- breast[-1]
+df$class <- factor(df$class, levels=c(2,4),
+                     labels=c("benign", "malignant"))
+
+index <- createDataPartition(breast$class, p=0.7, list=FALSE)
+train1 <- df[index,]
+test <- df[-index,]
+fit <- glm(class ~ ., data=train1, family=binomial)
+
+```
+
+The plotROCS function^[Some code for the generation of the plot and relevant statistics as queried by the hidden helper function `getProbs` have been used from "Enhanced ROC Curve" coding example curated by Professor Robert Kabacoff as part of QAC385: Advanced R. Citation: Original source unknown. Retrieved by Kabacoff, Robert. "code - enhanced ROC curve.R." Function. Wesleyan University. Middletown, CT. October 2018. Accessed 4 December, 2018] is a more detailed alternative to plotting logistic regression model ROC curves than using the ROC package. The function inputs one or more data models, and calculates a detailed ROC curve with user specified options. These options include line and plot color manipulation, generation of the optimal point on plot, and cutoff value displays. A table of important values for each model is printed to the console upon running; the values include the optimal cutoff point, model accuracy, sensitivity, specificity, and area under the curve. Plot dimensions depend on the "Plots" window size where graph is generated.
+
+Note: The data sets for each model must be *unique*. Using models generated from the same data set (ex, `train`) will result in an error.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+## Set Up and a Few Examples
+
+There are two preprogrammed model examples available to this function; one using the regclass data set PIMA^[Retrieved from Course Moodle Page for QAC385: Advanced R. Kabacoff, Robert. "code - Logistic Regression 3.R." Code sample. Wesleyan University. Middletown, CT. October 2018. Accessed 4 December, 2018], and another utilizing Wisconsin Breast Cancer data^[Retrieved from Course Moodle Page for QAC385: Advanced R. Kabacoff, Robert. "code - Logistic Regression 2.R." Code sample. Wesleyan University. Middletown, CT. October 2018. Accessed 4 December, 2018].
+
+```{r,warning=F, message=F}
+library(plotROCS)
+#PIMA
+fit.glm <-model1()
+#Breast Cancer
+fit<-model2()
+```
+
+### Usage
+**Simply input your models into the function. An example with all of the presets:**
+
+```{r, warning=F, message=F,fig.show='hold'}
+plotROCS(fit.glm, fit)
+```
+
+**An example changing the line and optimal point colors:**
+
+```{r,fig.show='hold'}
+plotROCS(fit.glm, fit, colorsList = c("purple","pink"), colorPoints = "green")
+```
+
+**An example changing the cutoff values, excluding the optimal points:**
+```{r,fig.show='hold'}
+plotROCS(fit.glm, colorsList = "cornflowerblue", opCP = F, cutoffSpec = seq(0,1,by=.25))
+```
+
