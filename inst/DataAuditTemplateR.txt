@@ -152,7 +152,7 @@ df_freq_tables <- function(data, vars, na.rm = TRUE) {
 ```
 
 ```{r, fig.width=4, eval=CATEGORICAL, results="asis"}
-if(!is.na(df_freq_tables(xxxdata, catvar))){
+if(sum(is.na(df_freq_tables(xxxdata, catvar)))!=0){
   tables <- lapply(df_freq_tables(xxxdata, catvar), kable, align = c("l", "r", "r"), digits=2, format= "html")
   for (i in seq_along(tables)) print(tables[[i]])
   }
@@ -233,7 +233,7 @@ cat(paste("## Potential Issues\n\n"))
 ```
 
 ```{r Missing, eval=ISSUES}
-Missing <- sum(is.na(xxxdata)) != 0
+Missing <- (sum(is.na(xxxdata)) != 0)
 ```
 
 ```{r, results='asis', eval=ISSUES & Missing}
@@ -245,7 +245,7 @@ This makes up ", round((sum(is.na(xxxdata))/sum(is.na(xxxdata), !is.na(xxxdata))
 
 ```{r Cat, eval=ISSUES}
 should_be_categorical <- function(var) {
-  if (!is.numeric(var) & !is.factor(var)) return(F)
+  if (!is.numeric(var) | is.factor(var)) return(F)
   if (length(levels(factor(var))) < 5) {
     return(T)
   } else {
@@ -343,6 +343,6 @@ Some Variables only have one value and therefore should not be used in analysis.
 ```{r Boring Vars, eval=ISSUES & Bvar}
 kable(bovar, col.names = "Vars w/ One Value")
 ```
-```{r NoIssues, eval=(ISSUES & !Skw & !Missing & !Cat & !Lvar), results='asis'}
-cat("No Issues")
+```{r NoIssues, eval=ISSUES, results='asis'}
+if  (!Skw & !Missing & !Cat & !Lvar) cat("No Issues")
 ```

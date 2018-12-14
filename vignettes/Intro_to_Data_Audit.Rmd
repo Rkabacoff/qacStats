@@ -14,16 +14,17 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 library(qacStat)
+if(!require(qacData)) install.packages("qacData")
 ```
 
 The data audit function takes a data frame, or an object that can be coerced to a dataframe, and returns a report with semi-customizable parts. The Report is made up of five parts: Basic Statistics, Quantitative Statistics, Categorical Statistics, Bivariate Analysis, Possible Issues.
 
-Users can pass their own summary statistics to the report through the syntax described in the \code{skimr} package detailed below.
+Users can pass their own summary statistics to the report through the syntax described in the \code{skimr} package detailed below. Any functions added this way must have a single ouptut, so a function like \code{levels} for factors will return an error.
 ```{r sum, eval=F, echo=FALSE}
 mysummarystatistics <- list(numeric=list(mean=mean, standd=sd),
                             character=list(length=length),
                             integer=list(median=median),
-                            factor=list(levels=levels))
+                            factor=list(nlevels=nlevels))
 audit(qacData::cars74, summaryStats = mysummarystatistics)
 ```
 
@@ -45,5 +46,16 @@ Every part of this report can be switched on or off using the arguments correspo
 
 ```{r pieces, eval=F}
 audit(qacData::tv17, Basic = T, Quantitative = T, Categ = F, Biv=T)
+```
+
+####Known Issues
+When using audit on a tibble or matrix, this function returns an error. Coerce to a data.frame before using.
+
+```{r issue, eval=FALSE}
+audit(qacData::wine)
+#Returns an Error
+
+audit(as.data.frame(qacData::wine))
+#Works fine
 ```
 
