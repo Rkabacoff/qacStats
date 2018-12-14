@@ -34,7 +34,7 @@ audit <- function(data, Basic = TRUE, Quantitative = TRUE, Categorical = TRUE,
                   Issues = TRUE, Bivariate = FALSE,
                   summaryStats = NULL, gg = TRUE) {
   if (is.tbl(data)) {
-    data <- as.data.frame(data)
+    class(data) <- "data.frame"
   }
   if(!is.data.frame(data)) data <- as.data.frame(data)
   data <- deparse(substitute(data))
@@ -50,7 +50,7 @@ audit <- function(data, Basic = TRUE, Quantitative = TRUE, Categorical = TRUE,
   report <- gsub("ISSUES", Issues, report, fixed = TRUE)
   report <- gsub("BIVARIATE", Bivariate, report, fixed = TRUE)
   if (!is.null(summaryStats)) {
-    report <- gsub("SUMMARYSTATS", summaryStats, report, fixed = TRUE)
+    #report <- gsub("SUMMARYSTATS", summaryStats, report, fixed = TRUE)
   }
 
   # output template and render
