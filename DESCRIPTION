@@ -1,4 +1,4 @@
-Package: qacStat
+Package: qacStats
 Type: Package
 Title: Statistical functions for QAC courses
 Version: 0.1.0
